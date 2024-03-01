@@ -2,33 +2,39 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import spotipy
 import spotipy.util as util
 import numpy as np
+from spotipy.oauth2 import SpotifyOAuth
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
-username = ""
 
 # Spotify Token Access
-client_id = ""
-client_secret = ""
-if not client_id or not client_secret or not username:
-    print('ERROR: One of client_id, client_secret, or username is unset in spotify_accessor.py.')
+SPOTIFY_USERNAME = os.environ.get("SPOTIFY_USERNAME")
+SPOTIPY_CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
+SPOTIPY_CLIENT_SECRET = os.environ.get("SPOTIPY_CLIENT_SECRET")
+SPOTIPY_REDIRECT_URI = os.environ.get("SPOTIPY_REDIRECT_URI")
+print(SPOTIFY_USERNAME)
+if not SPOTIPY_CLIENT_ID or not SPOTIPY_CLIENT_SECRET or not SPOTIFY_USERNAME:
+    print('ERROR: One of SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET, or SPOTIFY_USERNAME is unset in spotify_accessor.py.')
     exit(1)
 
-client_credentials_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
+client_credentials_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID, client_secret=SPOTIPY_CLIENT_SECRET)
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
 
 # Create Spotify playlist ID
-def create_playlist(username):
+def create_playlist(playlist_name=None):
 
-    username = username
-    playlist_name = input('Enter playlist name: ')
+    if playlist_name is None:
+        playlist_name = input('Enter playlist name: ')
 
-    token = util.prompt_for_user_token(username=username, scope='playlist-modify-public', client_id=client_id,
-                                       client_secret=client_secret, redirect_uri="http://localhost:8888/callback")
+    token = util.prompt_for_user_token(username=SPOTIFY_USERNAME, scope='playlist-modify-public', client_id=SPOTIPY_CLIENT_ID,
+                                       client_secret=SPOTIPY_CLIENT_SECRET, redirect_uri=SPOTIPY_REDIRECT_URI)
 
     if token:
         sp = spotipy.Spotify(auth=token)
         sp.trace = False
-        playlists = sp.user_playlist_create(username, playlist_name)
+        playlists = sp.user_playlist_create(SPOTIFY_USERNAME, playlist_name)
         return playlists['id']
 
 
@@ -83,21 +89,29 @@ def get_missing_track_id(missing_albums1, missing_tracks1):
         i += 1
     return my_array
 
-def add_more_than_100_songs_to_playlist(username, playlist_id, track_ids):
+def add_songs_playlist(song_list, playlist_id):
+    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=SPOTIPY_CLIENT_ID,
+                                               client_secret=SPOTIPY_CLIENT_SECRET,
+                                               redirect_uri=SPOTIPY_REDIRECT_URI,
+                                               scope='playlist-modify-public playlist-read-private'))
+    sp.playlist_add_items(playlist_id, song_list)
+
+
+def add_more_than_100_songs_to_playlist(playlist_id, track_ids):
     #split array in size of 50
     track_id_chunks = np.array_split(track_ids, len(track_ids)/50)
     for track_id_chunk in track_id_chunks:
-        add_songs_to_playlist(username, playlist_id, track_id_chunk)
+        add_songs_to_playlist(playlist_id, track_id_chunk)
 
 # Add songs to Spotify Playlist
-def add_songs_to_playlist(username, playlist_id, track_ids):
+def add_songs_to_playlist( playlist_id, track_ids):
 
     username = username
     playlist_id = playlist_id
     track_ids = track_ids
 
-    token = util.prompt_for_user_token(username=username, scope='playlist-modify-public', client_id=client_id,
-                                       client_secret=client_secret, redirect_uri="http://localhost:8888/callback")
+    token = util.prompt_for_user_token(username=SPOTIFY_USERNAME, scope='playlist-modify-public', client_id=SPOTIPY_CLIENT_ID,
+                                       client_secret=SPOTIPY_CLIENT_SECRET, redirect_uri=SPOTIPY_REDIRECT_URI)
 
     if token:
         sp = spotipy.Spotify(auth=token)

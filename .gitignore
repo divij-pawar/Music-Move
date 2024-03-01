@@ -1,2 +1,6 @@
 *.xml
 *.pyc
+*.html
+*.cache*
+*Playlist*
+*.env
