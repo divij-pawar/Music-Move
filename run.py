@@ -22,6 +22,7 @@ for file_name in filtered_list:
         soup = BeautifulSoup(html_content, 'html.parser')
 
         # Find all elements with the specified data-testid attribute
+        # REPLACE "attrs" value for each element in case of error #########################################
         song_elements = soup.find_all(attrs={"data-testid": "track-title"})
         artist_elements = soup.find_all(attrs={"songs-list__col songs-list__col--secondary svelte-4lh1r1"})
         album_elements = soup.find_all(attrs={"songs-list__col songs-list__col--tertiary svelte-4lh1r1"})
